@@ -24,7 +24,28 @@ typedef struct
 /* ============================= */
 
 /* Initialization */
-void initializeGame(GameState *g);
+void initializeGame(GameState *g)
+{
+    int i, j;
+
+    g->good = 0;
+    g->go = 0; 
+    g->start = 1;
+    g->over = 0;
+    g->found = 0;
+    g->val = 0;
+
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            g->R[i][j] = 0;
+            g->B[i][j] = 0;
+            g->S[i][j] = 0;
+            g->T[i][j] = 0;
+        }
+    }
+}
 
 /* Display */
 void displayBoard(GameState g);
