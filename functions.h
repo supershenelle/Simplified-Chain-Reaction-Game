@@ -49,7 +49,7 @@ void initializeGame(GameState *g)
 {
     int i, j;
 
-    g->valid = 0; // 0 if invalid move, 1 if valid move
+    g->good = 0; // 0 if invalid move, 1 if valid move
     g->go = 0; // 0 if red, 1 if blue
     g->start = 1; // 0 if normal gameplay, 1 if starting
     g->over = 0; // 0 if game running, 1 if game ends
@@ -179,7 +179,7 @@ void removePos(GameState *g, int row, int col)
     int i;
     int neighborRow, neighborCol;
 
-    for (i-0; i<4; i++)
+    for (i=0; i<4; i++)
     {
         neighborRow = row + changeRow[i];
         neighborCol = col + changeCol[i];
@@ -224,7 +224,7 @@ void replacePos(GameState *g, int row, int col)
     int i;
     int neighborRow, neighborCol;
 
-    for (i-0; i<4; i++)
+    for (i=0; i<4; i++)
     {
         neighborRow = row + changeRow[i];
         neighborCol = col + changeCol[i];
@@ -398,5 +398,5 @@ void showResult(GameState g)
     else if (nBlue > nRed)
         printf("WINNER: BLUE\n");
     else
-        print("RESULT: DRAW\n");
+        printf("RESULT: DRAW\n");
 }
