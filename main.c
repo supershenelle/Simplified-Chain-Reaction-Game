@@ -18,7 +18,7 @@ int main ()
     /* Loop continues as long as game.over is 0 */
     while (game.over == 0) {
         displayBoard(game);
-        getMove(&game, &row, &col);
+        getMove(&row, &col);
         
         nextPlayerMove(&game, row, col);
         checkGameOver(&game);
