@@ -171,187 +171,109 @@ int isValidPos(int row, int col)
 }
 
 /* Game Actions */
-void removePos(GameState *g, int row, int col)
+void removePos(GameState *g, int row, int col) 
 {
-    int changeRow[4] = {-1, 1, 0, 0};
-    int changeCol[4] = {0, 0, -1, 1};
+    /* Only remove the piece at the specific coordinate */
+    g->R[row][col] = 0;
+    g->B[row][col] = 0;
+    g->S[row][col] = 0;
+    g->T[row][col] = 0;
+}
 
-    int i;
-    int neighborRow, neighborCol;
-
-    for (i = 0; i < 4; i++)
+void replacePos(GameState *g, int row, int col) 
+{
+    if (isValidPos(row, col)) 
     {
-        neighborRow = row + changeRow[i];
-        neighborCol = col + changeCol[i];
-        // bali mangyayari is ccheck nya ung (-1,0) (0,1) and so on from the position
-
-        //check kung nasa loob pa yung neighbors
-        if (isValidPos(neighborRow, neighborCol)==1)
-        {
-            //RED TURN
-            if (g->go == 0)
-            {
-                //check kung may blue kami
-                if (g->B[neighborRow][neighborCol] == 1)
-                {
-                    //remove blue piece
-                    g->B[neighborRow][neighborCol] = 0;
-                    //update state
-                    g->S[neighborRow][neighborCol] = 0;
-                }
-            }
-
-            //BLUE TURN
+        int found = 0;
+        /* Capture Logic */
+        if (g->go == 0) 
+        { // Red Turn
+            if (g->B[row][col]) 
+                g->B[row][col] = 0; found = 1;
+            else if (g->R[row][col]) 
+                found = 1;
             else
-            {
-                if (g->R[neighborRow][neighborCol] == 1)
-                {
-                    //remove red piece
-                    g->R[neighborRow][neighborCol] = 0;
-                    //update state
-                    g->S[neighborRow][neighborCol] = 0;
-                }
-            }
+                g->R[row][col] = 1;
+        } 
+        else 
+        { // Blue Turn
+            if (g->R[row][col])
+                g->R[row][col] = 0; found = 1;
+            else if (g->B[row][col])
+                found = 1;
+            else 
+                g->B[row][col] = 1;
+        }
+
+        /* Chain Reaction Trigger */
+        if (found && g->S[row][col] == 0)
+            g->S[row][col] = 1;
+        else if (found && g->S[row][col] == 1 && g->T[row][col] == 0) 
+        {
+            g->T[row][col] = 1;
+            expandPos(g, row, col); // RECURSIVE CALL
         }
     }
 }
 
-void replacePos(GameState *g, int row, int col)
+void expandPos(GameState *g, int row, int col) 
 {
-   int changeRow[4] = {-1, 1, 0, 0};
-    int changeCol[4] = {0, 0, -1, 1};
+    removePos(g, row, col);
+    /* Spread to neighbors - each will call replacePos again */
+    replacePos(g, row - 1, col);
+    replacePos(g, row + 1, col);
+    replacePos(g, row, col - 1);
+    replacePos(g, row, col + 1);
+}
 
-    int i;
-    int neighborRow, neighborCol;
-
-    for (i = 0; i < 4; i++)
+void updatePos(GameState *g, int row, int col) 
+{
+    if (g->S[row][col] == 0) 
     {
-        neighborRow = row + changeRow[i];
-        neighborCol = col + changeCol[i];
-        // bali mangyayari is ccheck nya ung (-1,0) (0,1) and so on from the position
-
-        //check kung nasa loob pa yung neighbors
-        if (isValidPos(neighborRow, neighborCol)==1)
-        {
-            //RED TURN
-            if (g->go == 0)
-            {
-                //check kung may blue kami
-                if (g->B[neighborRow][neighborCol] == 1)
-                {
-                    //remove blue piece
-                    g->B[neighborRow][neighborCol] = 0;
-                    //replace to red
-                    g->R[neighborRow][neighborCol] = 1;
-                    //update state
-                    g->S[neighborRow][neighborCol] = 1;
-                }
-            }
-
-            //BLUE TURN
-            else
-            {
-                if (g->R[neighborRow][neighborCol] == 1)
-                {
-                    //remove red piece
-                    g->R[neighborRow][neighborCol] = 0;
-                    //replace to red
-                    g->B[neighborRow][neighborCol] = 1;
-                    //update state
-                    g->S[neighborRow][neighborCol] = 1;
-                }
-            }
-        }
-    }
-}
-
-void expandPos(GameState *g, int row, int col)
-{
-    /* now, i cant make perfect sense of it but according to the specs,
-            u = (a-1,b), d = (a+1,b), k = (a,b-1), r = (a, b+1) */
-int i;
-int dr[4] = {-1, 1, 0, 0};
-int dc[4] = {0, 0, -1, 1};
-
-    for (i = 0; i < 4; i++) {
-        int nr = row + dr[i];
-        int nc = col + dc[i];
-
-        if (isValidPos(nr, nc)) {
-            if (g->go == 0) {
-                if (g->B[nr][nc] == 1) {
-                    g->B[nr][nc] = 0;
-                    g->R[nr][nc] = 1;
-                }
-            } else {
-                if (g->R[nr][nc] == 1) {
-                    g->R[nr][nc] = 0;
-                    g->B[nr][nc] = 1;
-                }
-            }
-            g->S[nr][nc] = (g->R[nr][nc] || g->B[nr][nc]);
-        }
-    }
-}
-
-void updatePos(GameState *g, int row, int col)
-{
-    g->good = 0; // good = false
-    
-    if (g->S[row][col] == 0) {
         g->S[row][col] = 1;
-        g->good = !g->good;
+        g->good = 1;
     } 
-
-    else if (!g->good && g->S[row][col] == 1 && g->T[row][col] == 0) {
+    else if (g->T[row][col] == 0) 
+    {
         g->T[row][col] = 1;
         expandPos(g, row, col);
+        g->good = 1;
     }
 }
 
-void nextPlayerMove(GameState *g, int row, int col)
+void nextPlayerMove(GameState *g, int row, int col) 
 {
-int i, j;
-if (g->over == 0) {
-        
-        /* initial piece placement */
-        if (g->start == 1) {
-            // (start AND go) -> Red move
-            if (g->go == 0) { 
-                g->R[row][col] = 1;
-            } 
-            // (start AND NOT go) -> Blue move
-            else {
+    int i, j;
+    if (g->over == 0) {
+        if (g->start == 1) 
+        {
+            if (g->go == 0)
+                g->R[row][col] = 1; 
+            else 
                 g->B[row][col] = 1;
-            }
-            g->S[row][col] = 1;
-            g->good = 1;       
+            g->S[row][col] = 1; g->good = 1;
         } 
-            
-        else {
-            if ((g->go == 0 && g->R[row][col] == 1) || (g->go == 1 && g->B[row][col] == 1)) {
-                updatePos(g, row, col); 
-                g->good = 1;      
+        else
+            /* Validates that the player clicked their own piece */
+            if ((g->go == 0 && g->R[row][col] == 1) || (g->go == 1 && g->B[row][col] == 1))
+                updatePos(g, row, col);
+        
+        /* Switches turn and increments counter if the move was valid */
+        if (g->good == 1) 
+        {
+            if (g->go == 0) 
+                g->go = 1;
+            else 
+                g->go = 0;
+            g->val = g->val + 1;
+            g->good = 0;
+            for (i = 1; i <= 3; i++) {
+                for (j = 1; j <= 3; j++) { g->T[i][j] = 0; }
             }
         }
-
-        // (start AND |R|=1 AND |B|=1) -> start = false
-        if (g->start == 1 && countPieces(g->R) >= 1 && countPieces(g->B) >= 1) {
+        /* Ends setup phase once both players have placed a piece */
+        if (g->start == 1 && countPieces(g->R) >= 1 && countPieces(g->B) >= 1)
             g->start = 0;
-        }
-
-        if (g->good == 1) {
-            g->good = 0;      // good = ¬good 
-            g->go = !g->go;   // go = ¬go 
-            g->val = g->val + 1; // val = val + 1
-            
-            // Reset T so the next player's expansion doesn't think cells were already visited 
-            for(i = 0; i < 4; i++) {
-                for(j = 0; j < 4; j++) {
-                    g->T[i][j] = 0;
-                }
-            }
-        }
     }
 }
 
