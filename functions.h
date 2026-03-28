@@ -359,8 +359,8 @@ if (g->over == 0) {
 int countPieces(int board[4][4]) 
 {
     int i, j, count = 0;
-    for(int i = 0; i < 4; i++)
-        for(int j = 0; j < 4; j++)
+    for(i = 0; i < 4; i++)
+        for(j = 0; j < 4; j++)
             if(board[i][j])
                 count++;
     
@@ -370,8 +370,8 @@ int countPieces(int board[4][4])
 int countFreeCells(GameState g) 
 {
     int i, j, occupied = 0;
-    for(int i = 0; i < 4; i++)
-        for(int j = 0; j < 4; j++)
+    for(i = 0; i < 4; i++)
+        for(j = 0; j < 4; j++)
             if(g.R[i][j] == 1|| g.B[i][j] == 1) 
                 occupied++;
     return 16 - occupied; // 4x4 matrix
