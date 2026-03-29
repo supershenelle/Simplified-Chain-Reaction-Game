@@ -267,27 +267,6 @@ void expandPos(GameState *g, int row, int col)
     replacePos(g, row, col + 1); // Right
 }
 
-    /* 3. Update State */
-    g->S[row][col] = 1; // Mark as occupied
-}
-
-/* Expand Position */
-void expandPos(GameState *g, int row, int col)
-{
-    if (isValidPos(*g, row, col))
-    {
-        if (g->T[row][col] == 0)
-        {
-            g->T[row][col] = 1;
-
-            replacePos(g, row - 1, col);
-            replacePos(g, row + 1, col);
-            replacePos(g, row, col - 1);
-            replacePos(g, row, col + 1);
-        }
-    }
-}
-
 /* Update Position */
 void updatePos(GameState *g, int row, int col) 
 {
