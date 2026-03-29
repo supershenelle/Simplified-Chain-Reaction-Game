@@ -56,9 +56,9 @@ void initializeGame(GameState *g)
     g->found = 0; 
     g->val = 0; // general counting variable for values
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 3; i++)
     {
-        for (j = 0; j < 4; j++)
+        for (j = 0; j < 3; j++)
         {
             g->R[i][j] = 0; //red
             g->B[i][j] = 0; //blue
@@ -94,15 +94,15 @@ void displayBoard(GameState g)
     const char *BOARD = "\033[0;37m";  
     const char *RESET = "\033[0m";
 
-    printf("\n%s    0   1   2   3%s\n", BOARD, RESET);
-    printf("%s  +---+---+---+---+%s\n", BOARD, RESET);
+    printf("\n%s    1   2   3%s\n", BOARD, RESET);
+    printf("%s  +---+---+---+%s\n", BOARD, RESET);
 
-    for(i = 0; i < 4; i++) 
+    for(i = 0; i < 3; i++) 
     {
 
         printf("%s%d |%s", BOARD, i, RESET);
 
-        for(j = 0; j < 4; j++) 
+        for(j = 0; j < 3; j++) 
         {
         // eto ung if nasa set R or B ung pieces
             if(g.R[i][j] == 1)
@@ -113,7 +113,7 @@ void displayBoard(GameState g)
                 printf("   %s|%s", BOARD, RESET); 
         }
         // print pang separate pero in board color
-        printf("\n%s  +---+---+---+---+%s\n", BOARD, RESET);
+        printf("\n%s  +---+---+---+%s\n", BOARD, RESET);
     }
 
     // eto ung current turn
@@ -164,7 +164,7 @@ int isValidPos(int row, int col)
 {
     int valid = 0;
 
-    if (row>=1 && row<4 && col>=1 && col<4)
+    if (row>=1 && row<3 && col>=1 && col<3)
         valid = 1;
 
     return valid;
@@ -292,11 +292,11 @@ int countPieces(int board[4][4])
 int countFreeCells(GameState g) 
 {
     int i, j, occupied = 0;
-    for(i = 0; i < 4; i++)
-        for(j = 0; j < 4; j++)
+    for(i = 0; i < 3; i++)
+        for(j = 0; j < 3; j++)
             if(g.R[i][j] == 1|| g.B[i][j] == 1) 
                 occupied++;
-    return 16 - occupied; // 4x4 matrix
+    return 9 - occupied; // 4x4 matrix
 }
 
 /* Game Status */
