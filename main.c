@@ -1,5 +1,5 @@
 /******************************************************************************
- *  Description     : Game mechanic functions for chain reaction game
+ *  Description     : Main game flow for chain reaction game
  *  Author/s        : Gagasa, Emmanuel
  *                    Nono, Shenelle Andrea
  *                    Fornoles, Sabina
