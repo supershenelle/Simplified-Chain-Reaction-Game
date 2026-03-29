@@ -182,38 +182,50 @@ void removePos(GameState *g, int row, int col)
 
 void replacePos(GameState *g, int row, int col) 
 {
-    if (isValidPos(row, col)) 
-    {
-        int found = 0;
-        /* Capture Logic */
-        if (g->go == 0) 
-        { // Red Turn
-            if (g->B[row][col]) 
-                g->B[row][col] = 0; found = 1;
-            else if (g->R[row][col]) 
-                found = 1;
-            else
-                g->R[row][col] = 1;
-        } 
-        else 
-        { // Blue Turn
-            if (g->R[row][col])
-                g->R[row][col] = 0; found = 1;
-            else if (g->B[row][col])
-                found = 1;
-            else 
-                g->B[row][col] = 1;
-        }
+    // 1. Boundary Check: Stop if we go outside the 3x3 play area
+    if (row < 1 || row > 3 || col < 1 || col > 3) return;
 
-        /* Chain Reaction Trigger */
-        if (found && g->S[row][col] == 0)
-            g->S[row][col] = 1;
-        else if (found && g->S[row][col] == 1 && g->T[row][col] == 0) 
-        {
-            g->T[row][col] = 1;
-            expandPos(g, row, col); // RECURSIVE CALL
+    int wasOccupied = g->S[row][col];
+
+    /* 2. Capture Logic */
+    if (g->go == 0) { // Red's turn or Red's expansion
+        if (g->B[row][col]) { 
+            g->B[row][col] = 0; // Remove Blue
         }
+        g->R[row][col] = 1;     // Place Red
+    } 
+    else { // Blue's turn or Blue's expansion
+        if (g->R[row][col]) { 
+            g->R[row][col] = 0; // Remove Red
+        }
+        g->B[row][col] = 1;     // Place Blue
     }
+
+    g->S[row][col] = 1; // Mark cell as occupied
+
+    /* 3. Explosion Trigger */
+    // If the cell was already occupied AND it hasn't exploded yet this turn (T matrix)
+    if (wasOccupied && g->T[row][col] == 0) 
+    {
+        g->T[row][col] = 1; // Mark as "already exploded" to prevent infinite loops
+        expandPos(g, row, col);
+    }
+}
+
+void expandPos(GameState *g, int row, int col) 
+{
+    // Remove the piece from the current cell (it "exploded" outward)
+    removePos(g, row, col);
+
+    // Spread the explosion to the 4 cardinal neighbors
+    replacePos(g, row - 1, col); // Up
+    replacePos(g, row + 1, col); // Down
+    replacePos(g, row, col - 1); // Left
+    replacePos(g, row, col + 1); // Right
+}
+
+    /* 3. Update State */
+    g->S[row][col] = 1; // Mark as occupied
 }
 
 void expandPos(GameState *g, int row, int col) 
@@ -244,36 +256,62 @@ void updatePos(GameState *g, int row, int col)
 void nextPlayerMove(GameState *g, int row, int col) 
 {
     int i, j;
-    if (g->over == 0) {
-        if (g->start == 1) 
+
+    if (g->over == 1) return;
+    
+    if (g->start == 1) 
+    {
+    
+        if (g->S[row][col] == 0) 
         {
-            if (g->go == 0)
+            if (g->go == 0) // Red Turn
                 g->R[row][col] = 1; 
-            else 
+            else            // Blue Turn
                 g->B[row][col] = 1;
-            g->S[row][col] = 1; g->good = 1;
+            
+            g->S[row][col] = 1; 
+            g->good = 1; // Mark move as successful
         } 
-        else
-            /* Validates that the player clicked their own piece */
-            if ((g->go == 0 && g->R[row][col] == 1) || (g->go == 1 && g->B[row][col] == 1))
-                updatePos(g, row, col);
-        
-        /* Switches turn and increments counter if the move was valid */
-        if (g->good == 1) 
+        else 
         {
-            if (g->go == 0) 
-                g->go = 1;
-            else 
-                g->go = 0;
-            g->val = g->val + 1;
+            printf("\033[1;33mPosition already taken! Choose an empty cell.\033[0m\n");
             g->good = 0;
-            for (i = 1; i <= 3; i++) {
-                for (j = 1; j <= 3; j++) { g->T[i][j] = 0; }
+        }
+    } 
+
+    else 
+    {
+
+        if ((g->go == 0 && g->R[row][col] == 1) || (g->go == 1 && g->B[row][col] == 1)) 
+        {
+            updatePos(g, row, col); 
+            g->good = 1;
+        } 
+        else 
+        {
+            printf("\033[1;31mInvalid Move: You must select your own piece!\033[0m\n");
+            g->good = 0;
+        }
+    }
+
+
+    if (g->good == 1) 
+    {)
+        g->go = (g->go == 0) ? 1 : 0;
+        g->val = g->val + 1;
+
+        for (i = 0; i < 4; i++) 
+        {
+            for (j = 0; j < 4; j++) 
+            {
+                g->T[i][j] = 0; 
             }
         }
-        /* Ends setup phase once both players have placed a piece */
-        if (g->start == 1 && countPieces(g->R) >= 1 && countPieces(g->B) >= 1)
-            g->start = 0;
+        g->good = 0;
+    }
+    if (g->start == 1 && countPieces(g->R) >= 1 && countPieces(g->B) >= 1)
+    {
+        g->start = 0;
     }
 }
 
