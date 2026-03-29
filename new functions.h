@@ -220,7 +220,6 @@ void nextPlayerMove(GameState *g, int row, int col)
         g->good = 1;
     } 
     else {
-        /* [cite: 69] If it's your turn and you pick your piece */
         if ((g->go == 1 && g->R[row][col] == 1) || (g->go == 0 && g->B[row][col] == 1)) {
             updatePos(g, row, col);
             g->good = 1;
