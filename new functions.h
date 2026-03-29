@@ -1,3 +1,11 @@
+/******************************************************************************
+ *  Description     : Game mechanic functions for chain reaction game
+ *  Author/s        : Gagasa, Emmanuel
+ *                    Nono, Shenelle Andrea
+ *                    Fornoles, Sabina
+ *  Section         : S15 / S05
+ ******************************************************************************/
+
 #include <stdio.h>
 
 /* ============================= */
