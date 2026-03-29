@@ -1,5 +1,7 @@
+#include <stdio.h>
+
 /* ============================= */
-/*        STRUCTURES             */
+/* STRUCTURES             */
 /* ============================= */
 
 typedef struct
@@ -72,21 +74,6 @@ void initializeGame(GameState *g)
 /* Display */
 void displayBoard(GameState g)
 {
-    /*
-   displayboard has 3 sets  in a visual grid
-   R - Red
-   B - Blue
-   S - Occupied
-
-   4x4 matrix sya and provides feedback sa kung sino is currently moving and ung current "population" ng board
-   accd sa specs, may red and blue pieces, and grids
-
-   for red pieces, "\033[1;31m"
-   for blue, "\033[1;34m"
-   grid line color, "\033[0;37m"
-   para maiwasan color bleed, ung reset: "\033[0m"
-    */
-
     int i, j;
 
     // define the colors
@@ -104,7 +91,6 @@ void displayBoard(GameState g)
 
         for(j = 1; j <= 3; j++) 
         {
-        // eto ung if nasa set R or B ung pieces
             if(g.R[i][j] == 1)
                 printf(" %sR%s %s|%s", RED, RESET, BOARD, RESET);
             else if (g.B[i][j] == 1)
@@ -112,17 +98,14 @@ void displayBoard(GameState g)
             else
                 printf("   %s|%s", BOARD, RESET); 
         }
-        // print pang separate pero in board color
         printf("\n%s  +---+---+---+%s\n", BOARD, RESET);
     }
 
-    // eto ung current turn
     if (g.go == 0) 
         printf("Current Turn: %sRED%s\n", RED, RESET);
     else 
         printf("Current Turn: %sBLUE%s\n", BLUE, RESET);
 
-    // display population
     printf("Current Val: %d\n", g.val);
     displayDivider();
 }
@@ -138,15 +121,11 @@ void getMove(GameState *g, int *row, int *col)
         printf("--> ENTER YOUR MOVE (ROW AND COLUMN):\n");
         printf("ENTER ROW: ");
         
-        // check if input is numeric for row
         if (scanf("%d", &r) == 1)
         {
             printf("ENTER COLUMN: ");
-            
-            // check if input is numeric for column
             if (scanf("%d", &c) == 1)
             {
-                // check if the position is within set M
                 if (!isValidPos(*g, r, c))
                 {
                     printf("\n--> USER HAS INPUTTED AN INVALID POSITION.\n");
@@ -175,7 +154,6 @@ void getMove(GameState *g, int *row, int *col)
                 printf("\n--> INVALID INPUT FORMAT FOR COLUMN.\n");
                 printf("--> INPUT MUST BE AN INTEGER BETWEEN 1-3. TRY AGAIN.\n");
                 displayDivider();
-                // getchar pampatanggal infinite loops
                 while (getchar() != '\n');
             }
         }
@@ -184,7 +162,6 @@ void getMove(GameState *g, int *row, int *col)
             printf("\n--> INVALID INPUT FORMAT FOR ROW.\n");
             printf("--> INPUT MUST BE AN INTEGER (1-3). TRY AGAIN.\n");
             displayDivider();
-            // getchar pampatanggal infinite loops
             while (getchar() != '\n');
         }
     }
@@ -193,74 +170,49 @@ void getMove(GameState *g, int *row, int *col)
 /* Validation */
 int isValidPos(GameState g, int row, int col)
 {
-    int valid = 0;
-
-    if (row >= 1 && row <= 3 && col >= 1 && col <= 3)
-        valid = 1;
-
-    return valid;
+    return (row >= 1 && row <= 3 && col >= 1 && col <= 3);
 }
 
 /* Game Actions */
 void removePos(GameState *g, int row, int col)
 {
-    if (g->go == 0) // red turn
-    {
-        if (g->B[row][col] == 1)
-        {
-            g->B[row][col] = 0;
-            g->S[row][col] = 0;
-        }
-    }
-    else // blue turn
-    {
-        if (g->R[row][col] == 1)
-        {
-            g->R[row][col] = 0;
-            g->S[row][col] = 0;
-        }
-    }
+    // FIX: Simplified to clear the cell entirely during an explosion
+    g->R[row][col] = 0;
+    g->B[row][col] = 0;
+    g->S[row][col] = 0;
 }
 
 /* Replace Position */
 void replacePos(GameState *g, int row, int col)
 {
-    // 1. Boundary Check: Stop if we go outside the 3x3 play area
     if (row < 1 || row > 3 || col < 1 || col > 3) return;
 
     int wasOccupied = g->S[row][col];
 
-    /* 2. Capture Logic */
-    if (g->go == 0) { // Red's turn or Red's expansion
-        if (g->B[row][col]) { 
-            g->B[row][col] = 0; // Remove Blue
-        }
-        g->R[row][col] = 1;     // Place Red
+    if (g->go == 0) { // Red's turn/expansion
+        g->B[row][col] = 0; 
+        g->R[row][col] = 1;
     } 
-    else { // Blue's turn or Blue's expansion
-        if (g->R[row][col]) { 
-            g->R[row][col] = 0; // Remove Red
-        }
-        g->B[row][col] = 1;     // Place Blue
+    else { // Blue's turn/expansion
+        g->R[row][col] = 0; 
+        g->B[row][col] = 1;
     }
 
-    g->S[row][col] = 1; // Mark cell as occupied
+    g->S[row][col] = 1;
 
-    /* 3. Explosion Trigger */
-    // If the cell was already occupied AND it hasn't exploded yet this turn (T matrix)
+    // Trigger expansion if cell was occupied and hasn't exploded yet this turn
     if (wasOccupied && g->T[row][col] == 0) 
     {
-        g->T[row][col] = 1; // Mark as "already exploded" to prevent infinite loops
         expandPos(g, row, col);
     }
 }
 
 void expandPos(GameState *g, int row, int col) 
 {
-    // Remove the piece from the current cell (it "exploded" outward)
+    // FIX: Set T flag IMMEDIATELY to prevent infinite recursion loop
+    g->T[row][col] = 1; 
     removePos(g, row, col);
 
-    // Spread the explosion to the 4 cardinal neighbors
     replacePos(g, row - 1, col); // Up
     replacePos(g, row + 1, col); // Down
     replacePos(g, row, col - 1); // Left
@@ -270,14 +222,8 @@ void expandPos(GameState *g, int row, int col)
 /* Update Position */
 void updatePos(GameState *g, int row, int col) 
 {
-    if (g->S[row][col] == 0) 
+    if (g->S[row][col] == 1 && g->T[row][col] == 0) 
     {
-        g->S[row][col] = 1;
-        g->good = 1;
-    } 
-    else if (g->T[row][col] == 0) 
-    {
-        g->T[row][col] = 1;
         expandPos(g, row, col);
         g->good = 1;
     }
@@ -287,21 +233,17 @@ void updatePos(GameState *g, int row, int col)
 void nextPlayerMove(GameState *g, int row, int col) 
 {
     int i, j;
-
     if (g->over == 1) return;
     
     if (g->start == 1) 
     {
-    
         if (g->S[row][col] == 0) 
         {
-            if (g->go == 0) // Red Turn
-                g->R[row][col] = 1; 
-            else            // Blue Turn
-                g->B[row][col] = 1;
+            if (g->go == 0) g->R[row][col] = 1; 
+            else            g->B[row][col] = 1;
             
             g->S[row][col] = 1; 
-            g->good = 1; // Mark move as successful
+            g->good = 1;
         } 
         else 
         {
@@ -309,10 +251,8 @@ void nextPlayerMove(GameState *g, int row, int col)
             g->good = 0;
         }
     } 
-
     else 
     {
-
         if ((g->go == 0 && g->R[row][col] == 1) || (g->go == 1 && g->B[row][col] == 1)) 
         {
             updatePos(g, row, col); 
@@ -325,22 +265,20 @@ void nextPlayerMove(GameState *g, int row, int col)
         }
     }
 
-
     if (g->good == 1) 
     {
         g->go = (g->go == 0) ? 1 : 0;
         g->val = g->val + 1;
 
         for (i = 0; i < 4; i++) 
-        {
             for (j = 0; j < 4; j++) 
-            {
                 g->T[i][j] = 0; 
-            }
-        }
+        
         g->good = 0;
     }
-    if (g->start == 1 && countPieces(g->R) >= 1 && countPieces(g->B) >= 1)
+
+    // FIX: End start phase only after both players have placed 3 pieces
+    if (g->start == 1 && countPieces(g->R) >= 3 && countPieces(g->B) >= 3)
     {
         g->start = 0;
     }
@@ -354,7 +292,6 @@ int countPieces(int board[4][4])
         for(j = 1; j <= 3; j++)
             if(board[i][j])
                 count++;
-    
     return count;
 }
 
@@ -364,9 +301,9 @@ int countFreeCells(GameState g)
     int i, j, occupied = 0;
     for(i = 1; i <= 3; i++)
         for(j = 1; j <= 3; j++)
-            if(g.R[i][j] == 1|| g.B[i][j] == 1) 
+            if(g.S[i][j] == 1) 
                 occupied++;
-    return 9 - occupied; // 4x4 matrix
+    return 9 - occupied;
 }
 
 /* Game Status */
@@ -376,19 +313,18 @@ void checkGameOver(GameState *g)
     int bCount = countPieces(g->B);
     int free = countFreeCells(*g);
 
-    if (free == 3 || g->val >= 20 || (!g->start && (rCount == 0 || bCount == 0)))
+    // FIX: Game ends if board is full, turn limit (50) reached, or player wiped out
+    if (free == 0 || g->val >= 50 || (!g->start && (rCount == 0 || bCount == 0)))
         g->over = 1;
 }
 
-/* Show Result YAYYYYYY */
+/* Show Result */
 void showResult(GameState g)
 {
-    int nRed, nBlue; // pang count sa pieces
+    int nRed = countPieces(g.R);
+    int nBlue = countPieces(g.B);
 
-    nRed = countPieces(g.R); //array pointing to red pieces nd so on..
-    nBlue = countPieces(g.B);
-
-    printf("| -------------- GAME OVER -------------- |\n"); // idk pa ano display adjust k nalang soon
+    printf("| -------------- GAME OVER -------------- |\n");
     printf("%sRed%s pieces: %d\n", "\033[31m", "\033[0m", nRed);
     printf("%sBlue%s pieces: %d\n", "\033[34m", "\033[0m", nBlue);
 
