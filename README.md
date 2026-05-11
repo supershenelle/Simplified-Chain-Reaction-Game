@@ -3,7 +3,7 @@
 > A two-player, console-based chain reaction board game written in C.
 
 **Authors:** Emmanuel Gagasa, Shenelle Andrea Nono, Sabina Fornoles  
-**Section:** S15 / S05
+**Section:** S15
 
 ---
 
@@ -89,7 +89,7 @@ The board renders with **ANSI color codes** in the terminal:
 |------|---------|
 | Emmanuel Gagasa | S15 |
 | Shenelle Andrea Nono | S15 |
-| Sabina Fornoles | S05 |
+| Sabina Fornoles | S15 |
 
 ---
 
